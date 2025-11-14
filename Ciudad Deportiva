@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Título actualizado -->
+    <title>Propuesta Ciudad Deportiva USS - Kubyte Labs</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Dependencias añadidas para la animación -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            /* Color de marca (cyan) */
+            --target-brand-color: #06b6d4; /* cyan-500 */
+            --target-brand-darker: #0891b2; /* cyan-600 */
+            --target-brand-shadow: rgba(6, 182, 212, 0.4);
+        }
+        html { font-size: 18px; }
+        html, body {
+            margin: 0; padding: 0; overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* gray-900 */
+            color: #F3F4F6; /* gray-100 */
+        }
+        #presentation-container {
+            display: flex; width: 100%; height: 100vh;
+            overflow-x: scroll; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+        }
+        /* Ocultar scrollbars */
+        #presentation-container::-webkit-scrollbar { display: none; }
+        #presentation-container { -ms-overflow-style: none; scrollbar-width: none; }
+        #presentation-container.is-locked { overflow: hidden; }
+
+        /* Estructura de Slide */
+        .slide {
+            flex: 0 0 100vw; width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            padding: 2rem 4rem; scroll-snap-align: start; position: relative;
+            box-sizing: border-box; opacity: 0; transform: scale(0.95);
+            animation: fadeInSlide 0.8s forwards;
+        }
+        .slide-content {
+            max-width: 1200px; width: 100%; max-height: 90vh;
+            overflow-y: auto; padding-right: 1rem; /* Padding para scrollbar */
+        }
+        /* Scrollbar custom para contenido de slide */
+        .slide-content::-webkit-scrollbar { width: 8px; }
+        .slide-content::-webkit-scrollbar-track { background: #1f2937; }
+        .slide-content::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        
+        @keyframes fadeInSlide { to { opacity: 1; transform: scale(1); } }
+
+        /* Componentes UI */
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
+        .accordion-button.active + .accordion-content { max-height: 500px; /* Altura máxima de ejemplo */ }
+        .accordion-button.active svg.arrow { transform: rotate(180deg); }
+        .accordion-button svg.arrow { transition: transform 0.3s ease-in-out; }
+        
+        .tab-button.active { background-color: var(--target-brand-color); color: #ffffff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Navegación */
+        .nav-arrow {
+            position: fixed; top: 50%; transform: translateY(-50%); z-index: 100;
+            background-color: rgba(31, 41, 55, 0.5); color: white;
+            border: 1px solid #4b5563; border-radius: 50%;
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s ease-in-out;
+        }
+        .nav-arrow:hover { background-color: rgba(55, 65, 81, 0.8); transform: translateY(-50%) scale(1.1); }
+        #prev-btn { left: 20px; }
+        #next-btn { right: 20px; }
+        .nav-arrow.hidden { display: none; }
+        
+        #slide-indicator {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 100; display: flex; gap: 12px;
+        }
+        .indicator-dot { width: 12px; height: 12px; background-color: #4b5563; border-radius: 50%; transition: background-color 0.3s ease; }
+        .indicator-dot.active { background-color: var(--target-brand-color); }
+        
+        /* Logos */
+        .slide-logos {
+            position: absolute; bottom: 20px; right: 40px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .slide-logos img { height: 40px; }
+        
+        /* Slide Oculto */
+        #detail-slide-pilar1 {
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
+            -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+        }
+        #detail-slide-pilar1.is-visible { opacity: 1; visibility: visible; }
+
+        /* Estilo para el pilar destacado */
+        #pilar-2-card {
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* --- ESTILOS HOJA DE RUTA --- */
+        .roadmap-step {
+            background-color: #374151; /* gray-700 */
+            color: #9CA3AF; /* gray-400 */
+        }
+        .roadmap-step.active {
+            background-color: var(--target-brand-color); /* cyan-500 */
+            color: #ffffff; /* white */
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        .roadmap-desc {
+            display: none;
+            animation: fadeInDesc 0.5s forwards;
+        }
+        .roadmap-desc.active {
+            display: block;
+        }
+        @keyframes fadeInDesc {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- INICIO ESTILOS ANIMACIÓN PIPELINE --- */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+        }
+        .pipeline-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+            min-height: 450px; /* Altura ajustada */
+        }
+        .pipeline-container {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            width: 100%;
+            transition: gap 0.5s ease;
+        }
+        .pipeline-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            align-items: center;
+            justify-content: space-around;
+            height: 450px; /* Altura fija para posicionamiento */
+            transition: opacity 0.5s ease, width 0.5s ease, padding 0.5s ease;
+        }
+        #source-col.collapsed {
+            width: 0;
+            opacity: 0;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        #repo-col {
+            flex-grow: 1;
+        }
+        .data-source {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 280px;
+            transition: all 0.3s ease;
+        }
+        .data-source .icon {
+            font-size: 2.5rem;
+            color: #64748b;
+            transition: color 0.3s ease;
+        }
+        .data-source.active .icon {
+            color: var(--target-brand-color);
+        }
+        .data-source.active {
+            border-color: var(--target-brand-color);
+            box-shadow: 0 0 15px var(--target-brand-shadow);
+        }
+        .central-repo {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            background: linear-gradient(145deg, #1e293b, #29374d);
+            border: 2px solid #334155;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: all 0.5s ease;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+        #repo-col.expanded .central-repo {
+            height: 450px;
+        }
+        .repo-content-wrapper {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .repo-view {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .repo-view.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+        .central-repo .repo-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            font-family: 'Roboto Mono', monospace;
+            z-index: 1;
+        }
+        .central-repo .repo-header .icon {
+            font-size: 3rem;
+            transition: all 0.3s ease;
+        }
+        .central-repo.active {
+            border-color: var(--target-brand-color);
+            box-shadow: 0 0 25px var(--target-brand-shadow);
+        }
+        .central-repo.active .repo-header .icon {
+            color: var(--target-brand-color);
+            transform: scale(1.1);
+        }
+        .repo-data-list {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            transition: opacity 0.3s ease;
+        }
+        .repo-data-list.fading-out {
+            opacity: 0;
+        }
+        .repo-data-item {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .repo-data-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .dashboard-view .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .data-packet-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .data-packet {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #22d3ee; /* cyan-400 */
+            border-radius: 50%;
+            opacity: 0;
+            box-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee;
+            transform: translate(var(--start-x), var(--start-y));
+        }
+        .data-packet.animate {
+            animation: travel 1.5s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+        }
+
+        @keyframes travel {
+            from {
+                opacity: 1;
+                transform: translate(var(--start-x), var(--start-y)) scale(0.5);
+            }
+            to {
+                opacity: 0;
+                transform: translate(var(--end-x), var(--end-y)) scale(0);
+            }
+        }
+        
+        .pipeline-button {
+            background-color: var(--target-brand-color);
+            transition: background-color 0.3s ease;
+        }
+        .pipeline-button:hover {
+            background-color: var(--target-brand-darker);
+        }
+
+        .chatbot-interface {
+            margin-top: 1.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .chatbot-interface.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* --- FIN ESTILOS ANIMACIÓN PIPELINE --- */
+
+    </style>
+</head>
+<body>
+
+    <main id="presentation-container">
+        
+        <!-- Diapositiva 1: Portada -->
+        <div class="slide">
+            <div class="slide-content text-center">
+                <h1 class="text-7xl font-extrabold tracking-tight text-white">
+                    Propuesta Estratégica para <span class="text-cyan-400">Ciudad Deportiva USS</span>
+                </h1>
+                <p class="mt-6 max-w-3xl mx-auto text-xl text-gray-400">
+                    Sistema de Inteligencia de Datos y Revenue Management.
+                </p>
+            </div>
+        </div>
+
+        <!-- Diapositiva 2: Requerimientos Clave (con lógica de destaque) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-center mb-8">El Desafío Actual de Ciudad Deportiva USS</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Pilar I (con ID para JS) -->
+                    <!-- Este es el pilar que será destacado por el JS -->
+                    <div id="pilar-2-card" class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                        <div class="text-3xl mb-3">💸</div>
+                        <h3 class="font-bold text-white text-xl mb-3">1. Pérdida de Ingresos</h3>
+                        <p id="pilar-2-text" class="text-sm text-gray-400">Los precios son <strong>estáticos o se basan en la intuición</strong>. Se deja dinero sobre la mesa en "banda prime" (alta demanda) y no se maximiza la ocupación en "horarios valle".</p>
+                    </div>
+                    
+                    <!-- Pilar II -->
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                        <div class="text-3xl mb-3">📊</div>
+                        <h3 class="font-bold text-white text-xl mb-3">2. Sin Visibilidad Central</h3>
+                        <p class="text-sm text-gray-400">No hay un tablero centralizado para analizar tendencias o rentabilidad entre <strong>Pádel, Tenis y Fútbol</strong>. Los datos están atrapados en descargas manuales de Excel desde Easy Cancha.</p>
+                    </div>
+                    
+                    <!-- Pilar III -->
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                        <div class="text-3xl mb-3">🔗</div>
+                        <h3 class="font-bold text-white text-xl mb-3">3. Expansión Bloqueada</h3>
+                        <p class="text-sm text-gray-400">No se puede listar el inventario en múltiples marketplaces (web propia, Class Pass) por falta de un <strong>"Channel Manager"</strong> que unifique la agenda, un problema ya resuelto en la hotelería.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 3: La Solución Propuesta (antes Dilema) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-center mb-8">Nuestra Solución: Un Enfoque por Fases</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                    
+                    <!-- Opción A -> Fase 1 -->
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                        <div class="text-3xl mb-3">🚀</div>
+                        <h3 class="font-bold text-white text-xl mb-3">Fase 1: Quick Wins y Automatización</h3>
+                        <ul class="space-y-2 text-sm mt-4 list-disc list-inside text-gray-300">
+                            <li><strong>Consolidar datos</strong> históricos de Easy Cancha en un Data Warehouse.</li>
+                            <li><strong>Dashboard de Insights</strong> con mapas de calor y KPIs centralizados.</li>
+                            <li><strong>Análisis de Elasticidad v1</strong> basado en reglas de negocio existentes.</li>
+                            <li>Entrega un "quick win" y valor inmediato al negocio.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Opción B -> Fase 2 -->
+                    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                        <div class="text-3xl mb-3">🧠</div>
+                        <h3 class="font-bold text-white text-xl mb-3">Fase 2: Inteligencia Predictiva (IA)</h3>
+                        <ul class="space-y-2 text-sm mt-4 list-disc list-inside text-gray-300">
+                            <li><strong>Modelamiento Predictivo (ML)</strong> para pronosticar la demanda real.</li>
+                            <li><strong>Integración de datos externos</strong> que afectan la demanda (clima, feriados).</li>
+                            <li><strong>Optimización de precios</strong> dinámica basada en IA y elasticidad.</li>
+                            <li>Es el núcleo del sistema de Revenue Management.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 4: Nuestra Propuesta (Accordion) -->
+        <div class="slide">
+            <div class="slide-content max-w-3xl mx-auto">
+                 <h2 class="text-4xl font-bold text-center mb-8">Nuestra Propuesta: <span class="text-cyan-400">Valor Inmediato y Escalable</span></h2>
+                 <div class="space-y-4">
+                     <!-- Acordeón 1 -->
+                     <div class="bg-gray-800 border border-gray-700 rounded-2xl">
+                         <button class="accordion-button active w-full flex justify-between items-center p-5 text-left font-semibold text-lg focus:outline-none">
+                             <span>🚀 1. Entrega un "Quick Win" Inmediato (Fase 1)</span>
+                             <svg class="w-6 h-6 text-gray-400 arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                         </button>
+                         <div class="accordion-content">
+                             <div class="p-5 border-t border-gray-700 text-gray-300 text-sm space-y-4">
+                                 <p>La <strong>Fase 1</strong> se enfoca en resolver dolores inmediatos. Consolidamos todos los Excels de Easy Cancha en un dashboard centralizado y entregamos un primer análisis de sensibilidad para optimizar los arriendos "spot" y dejar de basarse en la intuición.</p>
+                             </div>
+                         </div>
+                     </div>
+                     <!-- Acordeón 2 -->
+                     <div class="bg-gray-800 border border-gray-700 rounded-2xl">
+                         <button class="accordion-button w-full flex justify-between items-center p-5 text-left font-semibold text-lg focus:outline-none">
+                             <span>🏛️ 2. Construye la Base para la IA (Fase 2)</span>
+                             <svg class="w-6 h-6 text-gray-400 arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                         </button>
+                         <div class="accordion-content">
+                             <div class="p-5 border-t border-gray-700 text-gray-300 text-sm space-y-4">
+                                 <p>La base de datos centralizada de Fase 1 es el cimiento esencial. La <strong>Fase 2</strong> usa estos datos históricos para construir modelos de Machine Learning (IA) que pronostican la demanda real y modelan la verdadera elasticidad del precio.</p>
+                             </div>
+                         </div>
+                     </div>
+                     <!-- Acordeón 3 -->
+                     <div class="bg-gray-800 border border-gray-700 rounded-2xl">
+                         <button class="accordion-button w-full flex justify-between items-center p-5 text-left font-semibold text-lg focus:outline-none">
+                             <span>💡 3. Prepara la Expansión Futura (Fase 3)</span>
+                             <svg class="w-6 h-6 text-gray-400 arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                         </button>
+                         <div class="accordion-content">
+                             <div class="p-5 border-t border-gray-700 text-gray-300 text-sm space-y-4">
+                                 <p>Aunque el "Channel Manager" (Fase 3) se evalúa aparte, las Fases 1 y 2 son un pre-requisito. Es imposible gestionar múltiples marketplaces si no se tiene una agenda centralizada y un motor de precios inteligente que la alimente.</p>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 5: Zoom a la Solución (Tabs & Animación) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-center mb-10">Zoom a la Solución: Fases 1 y 2</h2>
+                <div class="mb-4 flex space-x-1 p-1 bg-gray-800 rounded-lg max-w-2xl mx-auto">
+                    <button class="tab-button w-full text-center py-2 px-4 rounded-md transition-colors duration-300 active" data-tab="tabA">El Problema</button>
+                    <button class="tab-button w-full text-center py-2 px-4 rounded-md transition-colors duration-300" data-tab="tabB">La Solución (El Modelo)</button>
+                    <button class="tab-button w-full text-center py-2 px-4 rounded-md transition-colors duration-300" data-tab="tabC">Entregables Clave</button>
+                </div>
+
+                <!-- Tab A: El Problema -->
+                <div id="tabA" class="tab-content active bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                    <h3 class="font-bold text-xl text-white mb-2">Datos Aislados y Precios Intuitivos</h3>
+                    <p class="text-gray-300">Los valiosos datos históricos de reservas están <strong>atrapados en Easy Cancha</strong> y solo son accesibles mediante descargas manuales de Excel. Los precios son estáticos o se basan en la intuición, perdiendo oportunidades en "bandas prime" y "horarios valle".</p>
+                </div>
+
+                 <!-- Tab B: La Solución (CON ANIMACIÓN) -->
+                 <div id="tabB" class="tab-content bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                     <h3 class="font-bold text-xl text-white mb-2">De Datos a Decisiones (IA)</h3>
+                     <p class="text-gray-300">Implementar un modelo que permita:</p>
+                     <ul class="list-disc list-inside mt-2 text-gray-400 text-sm space-y-1">
+                         <li><b>Pronosticar la demanda futura</b> (ocupación) por deporte, día y hora.</li>
+                         <li><b>Integrar variables externas:</b> Clima, feriados y precios de la competencia.</li>
+                         <li><b>Modelar la elasticidad del precio:</b> Entender la sensibilidad real de la demanda.</li>
+                         <li><b>Responder:</b> "Si subo el Pádel en $5.000 un martes, ¿cuántas reservas pierdo? ¿Vale la pena?".</li>
+                     </ul>
+
+                     <!-- INICIO DE ANIMACIÓN ADAPTADA -->
+                     <div class="border-t border-gray-700 mt-6 pt-6">
+                         <div class="text-center mb-12">
+                             <div class="flex items-center justify-center gap-4">
+                                 <h3 class="text-xl font-bold text-slate-100">Flujo de Datos del Modelo (Demo)</h3>
+                                 <button id="reset-pipeline-btn" title="Reiniciar animación" class="text-gray-400 hover:text-white transition-colors">
+                                     <span class="material-symbols-outlined">restart_alt</span>
+                                 </button>
+                             </div>
+                             <p class="max-w-3xl mx-auto text-gray-400 mt-3 text-sm">Vea el flujo desde la ingesta y ordenamiento de datos hasta la visualización en dashboards inteligentes. Siga los pasos para ver el proceso completo.</p>
+                         </div>
+                         <div class="pipeline-wrapper">
+                             <div class="pipeline-container">
+                                 <!-- Fuentes de Datos (Adaptadas) -->
+                                 <div id="source-col" class="pipeline-col justify-around">
+                                     <div id="source-crm" class="data-source"><span class="material-symbols-outlined icon">spreadsheet</span> <div><p class="font-semibold">Reservas</p><p class="text-sm text-slate-400">Easy Cancha (Excel)</p></div></div>
+                                     <div id="source-marketing" class="data-source"><span class="material-symbols-outlined icon">policy</span> <div><p class="font-semibold">Competencia</p><p class="text-sm text-slate-400">Scrapers (Conecta, etc.)</p></div></div>
+                                     <div id="source-matriculas" class="data-source"><span class="material-symbols-outlined icon">public</span> <div><p class="font-semibold">Datos Externos</p><p class="text-sm text-slate-400">APIs (Clima, Feriados)</p></div></div>
+                                 </div>
+                                 
+                                 <!-- Repositorio Central -->
+                                 <div id="repo-col" class="pipeline-col">
+                                     <div id="central-repo" class="central-repo">
+                                         <div id="repo-content-wrapper" class="repo-content-wrapper">
+                                             <!-- Vista 1: Lista de Datos -->
+                                             <div id="data-view" class="repo-view">
+                                                 <div class="repo-header">
+                                                     <span class="material-symbols-outlined icon">database</span>
+                                                     <span>Data Warehouse</span>
+                                                 </div>
+                                                 <div id="repo-data-list" class="repo-data-list space-y-1">
+                                                     <!-- Data items will be injected here by JS -->
+                                                 </div>
+                                             </div>
+                                             <!-- Vista 2: Dashboard Principal -->
+                                             <div id="main-dashboard-view" class="repo-view hidden">
+                                                 <div class="grid grid-cols-2 grid-rows-2 gap-4 h-full">
+                                                     <div class="chart-wrapper"><canvas id="doughnutChart"></canvas></div>
+                                                     <div class="chart-wrapper"><canvas id="barChart"></canvas></div>
+                                                     <div class="chart-wrapper"><canvas id="lineChart"></canvas></div>
+                                                     <div class="chart-wrapper"><canvas id="radarChart"></canvas></div>
+                                                 </div>
+                                             </div>
+                                             <!-- Vista 3: Respuesta Chatbot -->
+                                             <div id="chatbot-dashboard-view" class="repo-view hidden flex flex-col p-2">
+                                                  <p id="chatbot-text-response" class="text-sm text-slate-300 mb-2 text-center"></p>
+                                                  <div class="flex-grow relative">
+                                                       <canvas id="chatbotChart"></canvas>
+                                                  </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                             <div id="data-packet-container" class="data-packet-container"></div>
+                         </div>
+                         <div class="text-center mt-4">
+                             <!-- Botón de control de la animación -->
+                             <button id="start-pipeline-btn" class="pipeline-button text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-cyan-500/50 transition-all text-lg">
+                                 Iniciar ETL
+                             </button>
+                             <!-- Interfaz de Chatbot (oculta al inicio) -->
+                              <div id="chatbot-interface" class="chatbot-interface hidden max-w-2xl mx-auto">
+                                   <div class="flex items-center gap-4">
+                                        <span class="material-symbols-outlined text-4xl text-cyan-400">smart_toy</span>
+                                        <div class="flex-grow flex gap-2">
+                                             <input type="text" id="chatbot-input" class="flex-grow bg-slate-800 border border-slate-600 rounded-md px-4 py-2 text-slate-200 focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="Haz una pregunta sobre tus datos...">
+                                             <button id="chatbot-ask-btn" class="bg-cyan-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-cyan-700 transition-colors">Preguntar</button>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                     </div>
+                     <!-- FIN DE ANIMACIÓN -->
+
+                 </div>
+
+                <!-- Tab C: Entregables -->
+                <div id="tabC" class="tab-content bg-gray-800 p-6 rounded-2xl border border-gray-700">
+                    <h3 class="font-bold text-xl text-white mb-2">Entregables Clave (Fases 1 y 2)</h3>
+                     <ul class="list-disc list-inside mt-2 text-gray-400 text-sm space-y-1">
+                         <li><b>Data Warehouse Unificado</b>: Centralización de todos los Excels históricos de Easy Cancha.</li>
+                         <li><b>Dashboard de Insights</b>: Paneles interactivos con KPIs, mapas de calor y comportamiento de usuarios.</li>
+                         <li><b>Sistema de Análisis Elasticidad/Sensibilidad</b>: Módulo analítico de respuesta a cambios de precio.</li>
+                         <li><b>Ingesta de Datos Externos</b>: Scrapers de competencia (Conecta, C. Oriente) y APIs de Clima/Feriados.</li>
+                         <li><b>Modelos ML Predictivos</b>: Forecasting de demanda y modelo de elasticidad de precio.</li>
+                     </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 6: Hoja de Ruta -->
+        <div class="slide">
+            <div class="slide-content w-full max-w-5xl">
+                <h2 class="text-4xl font-bold text-center mb-16">Hoja de Ruta - Fases 1 y 2</h2>
+                
+                <!-- Barra de Progreso/Pasos -->
+                <div class="flex rounded-lg overflow-hidden border border-gray-700 shadow-lg">
+                    <!-- Paso 1 -->
+                    <div id="roadmap-step-0" class="roadmap-step flex-1 text-center p-4 cursor-pointer transition-all duration-300">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Paso 1</span>
+                        <span class="block text-sm font-bold mt-1">Diagnóstico</span>
+                    </div>
+                    <!-- Paso 2 -->
+                    <div id="roadmap-step-1" class="roadmap-step flex-1 text-center p-4 cursor-pointer transition-all duration-300 border-l border-gray-900/50">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Paso 2</span>
+                        <span class="block text-sm font-bold mt-1">Ingesta y DWH</span>
+                    </div>
+                    <!-- Paso 3 -->
+                    <div id="roadmap-step-2" class="roadmap-step flex-1 text-center p-4 cursor-pointer transition-all duration-300 border-l border-gray-900/50">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Paso 3</span>
+                        <span class="block text-sm font-bold mt-1">Dashboard v1</span>
+                    </div>
+                    <!-- Paso 4 -->
+                    <div id="roadmap-step-3" class="roadmap-step flex-1 text-center p-4 cursor-pointer transition-all duration-300 border-l border-gray-900/50">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Paso 4</span>
+                        <span class="block text-sm font-bold mt-1">Datos Externos y ML</span>
+                    </div>
+                    <!-- Paso 5 -->
+                    <div id="roadmap-step-4" class="roadmap-step flex-1 text-center p-4 cursor-pointer transition-all duration-300 border-l border-gray-900/50">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Paso 5</span>
+                        <span class="block text-sm font-bold mt-1">Despliegue</span>
+                    </div>
+                </div>
+
+                <!-- Contenedor de Descripciones -->
+                <div class="mt-8 min-h-[120px] text-center">
+                    <!-- Desc 1 -->
+                    <div id="roadmap-desc-0" class="roadmap-desc w-full max-w-2xl mx-auto">
+                        <h3 class="font-bold text-xl text-white mb-2">1. Diagnóstico y Configuración (F1)</h3>
+                        <p class="text-gray-400">Kick-off, alineación de KPIs, revisión de data histórica de Easy Cancha y configuración de proyecto en Google Cloud (GCP).</p>
+                    </div>
+                    <!-- Desc 2 -->
+                    <div id="roadmap-desc-1" class="roadmap-desc w-full max-w-2xl mx-auto">
+                        <h3 class="font-bold text-xl text-white mb-2">2. Ingesta y Data Warehouse (F1)</h3>
+                        <p class="text-gray-400">Creación de Data Lake (Cloud Storage) y Data Warehouse (BigQuery). Desarrollo de pipelines ETL (Dataflow) para procesar los Excels.</p>
+                    </div>
+                    <!-- Desc 3 -->
+                    <div id="roadmap-desc-2" class="roadmap-desc w-full max-w-2xl mx-auto">
+                        <h3 class="font-bold text-xl text-white mb-2">3. Dashboard y Análisis v1 (F1)</h3>
+                        <p class="text-gray-400">Construcción de dashboards interactivos (mapas de calor, KPIs). Desarrollo del módulo de Análisis de Elasticidad y Sensibilidad v1.</p>
+                    </div>
+                    <!-- Desc 4 -->
+                    <div id="roadmap-desc-3" class="roadmap-desc w-full max-w-2xl mx-auto">
+                        <h3 class="font-bold text-xl text-white mb-2">4. Datos Externos y Modelos ML (F2)</h3>
+                        <p class="text-gray-400">Desarrollo de Scrapers (competencia) y conexión a APIs (clima). Creación de modelos de Machine Learning (Forecasting y Elasticidad).</p>
+                    </div>
+                    <!-- Desc 5 -->
+                    <div id="roadmap-desc-4" class="roadmap-desc w-full max-w-2xl mx-auto">
+                        <h3 class="font-bold text-xl text-white mb-2">5. Despliegue y MLOps (F2)</h3>
+                        <p class="text-gray-400">Desplegar modelos en Vertex AI. Automatizar re-entrenamiento (MLOps). Realizar pruebas de integración, aceptación y marcha blanca.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Diapositiva 7: El Resultado (antes IA Generativa) -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-center mb-10">El Resultado: Inteligencia Accionable</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-3xl font-bold text-white mb-4">De Reportes Estáticos a Decisiones Dinámicas</h3>
+                        <p class="text-gray-300 mb-4">El objetivo final no es solo un dashboard, sino un sistema que entregue <strong>información accionable</strong> para optimizar procesos y aumentar ventas. El equipo podrá tomar decisiones de pricing <strong>ágiles y certeras</strong>, basadas en datos y no en intuición.</p>
+                        <ul class="list-disc list-inside text-gray-400 text-sm space-y-1">
+                            <li>Identificar segmentos inelásticos (subir precio).</li>
+                            <li>Detectar horarios valle (bajar precio/promoción).</li>
+                            <li>Reaccionar a cambios de la competencia y el clima.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Chat simulado -->
+                    <div class="bg-gray-800 rounded-2xl border border-gray-700 p-6 font-mono text-sm">
+                        <div class="flex flex-col space-y-4">
+                            
+                            <!-- Pregunta Usuario -->
+                            <div class="flex justify-end">
+                                <div class="bg-cyan-600 p-3 rounded-lg rounded-br-none max-w-xs">
+                                    <p class="text-white">¿Cuál es el horario más sensible al precio y cuál es el más inelástico?</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Respuesta IA -->
+                            <div class="flex justify-start">
+                                <div class="bg-gray-700 p-3 rounded-lg rounded-bl-none max-w-md">
+                                    <p class="text-gray-200">El <strong>Pádel nocturno</strong> (banda prime) es 'inelástico' (baja sensibilidad). <strong>Fútbol-tarde</strong> (horario valle) es 'elástico' (muy sensible). <br><br><strong>Recomendación:</strong> Puede subir el precio de Pádel Prime y evaluar un descuento en Fútbol-tarde para maximizar la ocupación.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 8: Propuesta Económica -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2 class="text-4xl font-bold text-center mb-8">Propuesta Económica (Fases 1 y 2)</h2>
+                <p class="text-center text-gray-400 max-w-3xl mx-auto mb-8">Modelo <strong>SaaS (Suscripción de Servicio)</strong> que incluye uso de la aplicación, administración de la nube, mantención, mejora continua y soporte técnico. Esta propuesta considera la habilitación y servicio para las Fases 1 y 2.</p>
+                <!-- Layout modificado a 2 columnas y centrado -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                    <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 text-center">
+                        <h3 class="font-bold text-white text-xl mb-3">Habilitación Fases 1 y 2</h3>
+                        <p class="text-5xl font-extrabold text-cyan-400">XXXX <span class="text-3xl font-bold text-gray-400">UF</span></p>
+                        <p class="text-sm text-gray-400 mt-2">(Implementación y Desarrollo)</p>
+                    </div>
+                    <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 text-center">
+                        <h3 class="font-bold text-white text-xl mb-3">Servicio Mensual</h3>
+                        <p class="text-5xl font-extrabold text-cyan-400">XXXX <span class="text-3xl font-bold text-gray-400">UF</span></p>
+                        <p class="text-sm text-gray-400 mt-2">(Soporte, Mantención, SaaS)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diapositiva 9: Próximos Pasos -->
+        <div class="slide">
+            <div class="slide-content text-center">
+                <h1 class="text-7xl font-extrabold tracking-tight text-white">
+                    Próximos <span class="text-cyan-400">Pasos</span>
+                </h1>
+                <p class="mt-6 max-w-3xl mx-auto text-xl text-gray-400">
+                    Validemos esta propuesta y comencemos a construir su sistema de Revenue Management.
+                </p>
+                <ul class="mt-8 text-left max-w-xl mx-auto text-gray-300 space-y-4 list-disc list-inside">
+                    <li>Ajustar el alcance y valores (XXXX) de la propuesta para Fases 1 y 2.</li>
+                    <li>Designar un contacto principal en Ciudad Deportiva USS para la coordinación y consultas.</li>
+                    <li>Coordinar el acceso a los datos históricos de Easy Cancha para iniciar el análisis.</li>
+                    <li>Suscribir los acuerdos de confidencialidad y el contrato de servicio.</li>
+                </ul>
+            </div>
+        </div>
+        
+    </main>
+
+    <!-- Slide Oculto para Detalles (Opcional, sin uso activo) -->
+    <div id="detail-slide-pilar1" class="slide fixed top-0 left-0 bg-gray-900/90 z-[200]">
+        <div class="slide-content">
+            <button id="hide-detail-pilar1" class="absolute top-8 right-12 text-white bg-gray-700 hover:bg-cyan-500 px-4 py-2 rounded-lg font-bold transition-colors">← Volver</button>
+            <h2 class="text-4xl font-bold text-center mb-4">Título del Detalle</h2>
+            <p class="text-center text-gray-400 mb-8 max-w-3xl mx-auto">Contenido detallado (opcional).</p>
+        </div>
+    </div>
+
+    <!-- Logos fijos -->
+    <div class="slide-logos">
+        <!-- Logo de Ciudad Deportiva USS actualizado -->
+        <img src="https://placehold.co/200x40/111827/FFFFFF?text=Ciudad+Deportiva+USS" alt="Logo Ciudad Deportiva USS" style="height: 40px;">
+        <img src="https://placehold.co/150x40/111827/FFFFFF?text=Kubyte+Labs" alt="Logo Kubyte Labs" style="height: 40px;">
+    </div>
+
+    <!-- Navegación (Flechas) -->
+    <button id="prev-btn" class="nav-arrow hidden">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    </button>
+    <button id="next-btn" class="nav-arrow">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </button>
+
+    <!-- Indicador de slide (Puntos) -->
+    <div id="slide-indicator"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- REFERENCIAS DOM ---
+            const container = document.getElementById('presentation-container');
+            const slides = document.querySelectorAll('#presentation-container > .slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const indicatorContainer = document.getElementById('slide-indicator');
+            let currentSlide = 0;
+
+            // --- Lógica para Diapositivas de Detalle (Opcional, sin uso) ---
+            const showDetailBtn = document.getElementById('show-detail-pilar1'); 
+            const hideDetailBtn = document.getElementById('hide-detail-pilar1'); 
+            const detailSlide = document.getElementById('detail-slide-pilar1'); 
+
+            if (showDetailBtn && hideDetailBtn && detailSlide) {
+                showDetailBtn.addEventListener('click', () => {
+                    detailSlide.classList.add('is-visible');
+                    container.classList.add('is-locked'); 
+                    prevBtn.style.display = 'none';
+                    nextBtn.style.display = 'none';
+                    indicatorContainer.style.display = 'none';
+                });
+                hideDetailBtn.addEventListener('click', () => {
+                    detailSlide.classList.remove('is-visible');
+                    container.classList.remove('is-locked'); 
+                    prevBtn.style.display = '';
+                    nextBtn.style.display = '';
+                    indicatorContainer.style.display = '';
+                    updateUI(); 
+                });
+            }
+            // --- Fin Lógica de Detalle ---
+
+            // --- LÓGICA DE NAVEGACIÓN PILAR (SLIDE 2) ---
+            const pilar2Card = document.getElementById('pilar-2-card');
+            const pilar2Text = document.getElementById('pilar-2-text');
+
+            function highlightPilar2() {
+                if (!pilar2Card) return;
+                pilar2Card.classList.remove('bg-gray-800', 'border-gray-700');
+                pilar2Card.classList.add('bg-cyan-900/50', 'border-2', 'border-cyan-400', 'ring-4', 'ring-cyan-400/20');
+                if (pilar2Text) {
+                    pilar2Text.classList.remove('text-gray-400');
+                    pilar2Text.classList.add('text-gray-300');
+                }
+            }
+
+            function unhighlightPilar2() {
+                if (!pilar2Card) return;
+                pilar2Card.classList.add('bg-gray-800', 'border-gray-700');
+                pilar2Card.classList.remove('bg-cyan-900/50', 'border-2', 'border-cyan-400', 'ring-4', 'ring-cyan-400/20');
+                 if (pilar2Text) {
+                    pilar2Text.classList.add('text-gray-400');
+                    pilar2Text.classList.remove('text-gray-300');
+                 }
+            }
+            // --- FIN LÓGICA PILAR ---
+
+            // --- LÓGICA DE NAVEGACIÓN HOJA DE RUTA (SLIDE 6) ---
+            let currentRoadmapStep = 0;
+            const totalRoadmapSteps = 5; // 5 pasos en el UI
+
+            function updateRoadmapStep(stepIndex) {
+                currentRoadmapStep = stepIndex;
+                
+                for (let i = 0; i < totalRoadmapSteps; i++) {
+                    const step = document.getElementById(`roadmap-step-${i}`);
+                    const desc = document.getElementById(`roadmap-desc-${i}`);
+                    
+                    if (step) {
+                        step.classList.toggle('active', i === stepIndex);
+                    }
+                    if (desc) {
+                        desc.classList.toggle('active', i === stepIndex);
+                    }
+                }
+            }
+
+            // Añadir clics a los pasos de la hoja de ruta
+            for (let i = 0; i < totalRoadmapSteps; i++) {
+                const step = document.getElementById(`roadmap-step-${i}`);
+                if (step) {
+                    step.addEventListener('click', () => {
+                        goToSlide(5); // Ir al slide 6 (índice 5)
+                        updateRoadmapStep(i);
+                    });
+                }
+            }
+            // --- FIN LÓGICA HOJA DE RUTA ---
+
+            // --- INICIO LÓGICA ANIMACIÓN PIPELINE (SLIDE 5) ---
+            const pipelineBtn = document.getElementById('start-pipeline-btn');
+            if (pipelineBtn) {
+                let pipelineState = 'idle'; // idle -> etl -> ordering -> analyzing -> chatbot -> reset
+                const sourceCol = document.getElementById('source-col');
+                const repoCol = document.getElementById('repo-col');
+                const repo = document.getElementById('central-repo');
+                const dataList = document.getElementById('repo-data-list');
+                const packetContainer = document.getElementById('data-packet-container');
+                const dataView = document.getElementById('data-view');
+                const mainDashboardView = document.getElementById('main-dashboard-view');
+                const chatbotDashboardView = document.getElementById('chatbot-dashboard-view');
+                const chatbotInterface = document.getElementById('chatbot-interface');
+                const chatbotInput = document.getElementById('chatbot-input');
+                const chatbotAskBtn = document.getElementById('chatbot-ask-btn');
+                const chatbotTextResponse = document.getElementById('chatbot-text-response');
+                const resetPipelineBtn = document.getElementById('reset-pipeline-btn');
+                let doughnutChart, barChart, lineChart, radarChart, chatbotChart;
+
+                // Datos de ejemplo adaptados para Ciudad Deportiva USS
+                const exampleData = [
+                    { type: 'Reserva', html: '<span class="text-sky-400">Reserva:</span> cancha_futbol_10:00.xlsx' },
+                    { type: 'Competencia', html: '<span class="text-amber-400">Competencia:</span> conecta_padel: $25.000' },
+                    { type: 'Clima', html: '<span class="text-rose-400">Clima:</span> mañana_lluvia: 15mm' },
+                    { type: 'Reserva', html: '<span class="text-sky-400">Reserva:</span> cancha_tenis_18:00.xlsx' },
+                    { type: 'Competencia', html: '<span class="text-amber-400">Competencia:</span> coriente_tenis: $18.000' },
+                    { type: 'Feriado', html: '<span class="text-rose-400">Feriado:</span> proximo_lunes: true' },
+                    { type: 'Reserva', html: '<span class="text-sky-400">Reserva:</span> cancha_padel_20:00.xlsx' },
+                ];
+
+                function renderData(data) {
+                    dataList.innerHTML = '';
+                    data.forEach((item, index) => {
+                        setTimeout(() => {
+                            const li = document.createElement('div');
+                            li.className = 'repo-data-item';
+                            li.innerHTML = item.html;
+                            dataList.appendChild(li);
+                            setTimeout(() => li.classList.add('visible'), 50);
+                        }, index * 50);
+                    });
+                }
+
+                function resetPipeline() {
+                    pipelineState = 'idle';
+                    if (sourceCol) sourceCol.classList.remove('collapsed');
+                    if (repoCol) repoCol.classList.remove('expanded');
+                    if (repo) repo.classList.remove('active');
+                    if (dataList) dataList.innerHTML = '';
+                    if (packetContainer) packetContainer.innerHTML = '';
+                    if (dataView) dataView.classList.remove('hidden');
+                    if (mainDashboardView) mainDashboardView.classList.add('hidden');
+                    if (chatbotDashboardView) chatbotDashboardView.classList.add('hidden');
+                    if (chatbotInterface) {
+                        chatbotInterface.classList.add('hidden');
+                        chatbotInterface.classList.remove('visible');
+                    }
+                    
+                    if (doughnutChart) doughnutChart.destroy();
+                    if (barChart) barChart.destroy();
+                    if (lineChart) lineChart.destroy();
+                    if (radarChart) radarChart.destroy();
+                    if (chatbotChart) chatbotChart.destroy();
+                    
+                    if (pipelineBtn) {
+                        pipelineBtn.classList.remove('hidden');
+                        pipelineBtn.disabled = false;
+                        pipelineBtn.textContent = 'Iniciar ETL';
+                    }
+                };
+                
+                if(resetPipelineBtn) {
+                    resetPipelineBtn.addEventListener('click', resetPipeline);
+                }
+
+                // Respuestas del chatbot adaptadas
+                const keywordMap = {
+                    'ocupacion': ['ocupacion', 'mapa calor', 'valle', 'prime', 'horario'],
+                    'elasticidad': ['elasticidad', 'sensibilidad', 'precio', 'subir', 'sensible'],
+                    'competencia': ['competencia', 'conecta', 'oriente'],
+                    'clima': ['clima', 'lluvia', 'sol', 'pronostico']
+                };
+
+                const chatbotResponses = {
+                    'ocupacion': {
+                        text: "El 'mapa de calor' muestra que la 'banda prime' (20:00) está al 95% de ocupación. El 'horario valle' (14:00) tiene la ocupación más baja (30%).",
+                        chartConfig: {
+                            type: 'bar',
+                            data: {
+                                labels: ['Banda Prime (20:00)', 'Horario Valle (14:00)'],
+                                datasets: [{ label: 'Ocupación (%)', data: [95, 30], backgroundColor: ['#06b6d4', '#475569'], borderRadius: 4 }]
+                            },
+                            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { ticks: { color: '#94a3b8' }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+                        }
+                    },
+                    'elasticidad': {
+                        text: "Pádel (noche) es 'inelástico' (baja sensibilidad al precio). Fútbol (tarde) es 'elástico' (muy sensible). Recomendación: Subir precio Pádel Prime.",
+                        chartConfig: {
+                            type: 'bar',
+                            data: {
+                                labels: ['Pádel Noche (Elasticidad)', 'Fútbol Tarde (Elasticidad)'],
+                                datasets: [{ label: 'Índice Elasticidad', data: [-0.2, -1.8], backgroundColor: ['#a78bfa', '#f472b6'], borderRadius: 4 }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { ticks: { color: '#94a3b8' }, grid: { display: false } } }, plugins: { legend: { display: false } } }
+                        }
+                    },
+                    'competencia': {
+                        text: "Conecta subió sus precios de Pádel en $2.000. Club Oriente mantiene precios. Nuestro modelo estima que podemos ajustar $1.500 sin perder demanda.",
+                        chartConfig: {
+                            type: 'scatter',
+                            data: {
+                                datasets: [
+                                { label: 'Nuestro Precio (Pádel)', data: [{x: 22000, y: 95}], backgroundColor: '#22d3ee'},
+                                { label: 'Conecta', data: [{x: 24000, y: 90}], backgroundColor: '#60a5fa'},
+                                { label: 'Club Oriente', data: [{x: 20000, y: 98}], backgroundColor: '#f87171'},
+                                ]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Precio (CLP)', color: '#94a3b8'}, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } }, y: { title: { display: true, text: 'Ocupación (%)', color: '#94a3b8'}, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.1)' } } }, plugins: { legend: { display: true, position: 'bottom', labels: {color: '#cbd5e1'} } } }
+                        }
+                    },
+                    'clima': {
+                        text: "Un pronóstico de lluvia reduce la demanda de Tenis (outdoor) en un 40%. Pádel (indoor) no se ve afectado.",
+                        chartConfig: {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Demanda Tenis (con Lluvia)', 'Demanda Pádel (con Lluvia)'],
+                                datasets: [{ data: [60, 100], backgroundColor: ['#fbbf24', '#22d3ee'], borderColor: '#1e293b', borderWidth: 4 }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: '#cbd5e1', boxWidth: 10, padding: 15 } } } }
+                        }
+                    }
+                };
+
+                function handleChatbotQuery() {
+                    chatbotAskBtn.disabled = true;
+                    chatbotAskBtn.textContent = '...';
+                    if (chatbotChart) chatbotChart.destroy();
+                    
+                    const query = chatbotInput.value.toLowerCase();
+                    let responseKey = null;
+                    for (const key in keywordMap) {
+                        if (keywordMap[key].some(keyword => query.includes(keyword))) {
+                            responseKey = key;
+                            break;
+                        }
+                    }
+                    const responseData = responseKey ? chatbotResponses[responseKey] : null;
+
+                    setTimeout(() => {
+                        mainDashboardView.classList.add('hidden');
+                        chatbotDashboardView.classList.remove('hidden');
+
+                        if (responseData) {
+                            chatbotTextResponse.textContent = responseData.text;
+                            const chatbotCtx = document.getElementById('chatbotChart').getContext('2d');
+                            chatbotChart = new Chart(chatbotCtx, responseData.chartConfig);
+                        } else {
+                            chatbotTextResponse.textContent = "No he podido encontrar datos sobre eso. Por favor, intenta con 'ocupación', 'precio' o 'clima'.";
+                        }
+                        chatbotAskBtn.disabled = false;
+                        chatbotAskBtn.textContent = 'Preguntar';
+                    }, 1000);
+                }
+
+                if (chatbotAskBtn) chatbotAskBtn.addEventListener('click', handleChatbotQuery);
+                if (chatbotInput) chatbotInput.addEventListener('keyup', (event) => {
+                    if (event.key === "Enter") {
+                        handleChatbotQuery();
+                    }
+                });
+
+                // Lógica de estados de la animación
+                pipelineBtn.addEventListener('click', () => {
+                    pipelineBtn.disabled = true;
+
+                    switch(pipelineState) {
+                        // 1. Iniciar ETL
+                        case 'idle':
+                            pipelineState = 'etl';
+                            pipelineBtn.textContent = 'Procesando...';
+                            
+                            const wrapperRect = packetContainer.getBoundingClientRect();
+                            const repoRect = repo.getBoundingClientRect();
+                            const targetX = repoRect.left - wrapperRect.left + (repoRect.width / 2);
+                            const targetY = repoRect.top - wrapperRect.top + (repoRect.height / 2);
+
+                            // Activa fuentes y crea paquetes de datos
+                            document.querySelectorAll('.data-source').forEach((source, index) => {
+                                setTimeout(() => {
+                                    source.classList.add('active');
+                                    const sourceRect = source.getBoundingClientRect();
+                                    const startX = sourceRect.right - wrapperRect.left;
+                                    const startY = sourceRect.top - wrapperRect.top + (sourceRect.height / 2);
+
+                                    for(let i = 0; i < 5; i++) {
+                                        setTimeout(() => {
+                                            const packet = document.createElement('div');
+                                            packet.className = 'data-packet';
+                                            packet.style.setProperty('--start-x', `${startX}px`);
+                                            packet.style.setProperty('--start-y', `${startY}px`);
+                                            packet.style.setProperty('--end-x', `${targetX}px`);
+                                            packet.style.setProperty('--end-y', `${targetY}px`);
+                                            packetContainer.appendChild(packet);
+
+                                            requestAnimationFrame(() => packet.classList.add('animate'));
+                                            setTimeout(() => packet.remove(), 1500);
+                                        }, i * 100);
+                                    }
+                                }, index * 300);
+                            });
+
+                            // Al finalizar la ingesta
+                            setTimeout(() => {
+                                repo.classList.add('active');
+                                renderData(exampleData);
+                                pipelineBtn.textContent = 'Ordenar Datos';
+                                pipelineBtn.disabled = false;
+                                pipelineState = 'ordering';
+                            }, 1800);
+                            break;
+
+                        // 2. Ordenar Datos
+                        case 'ordering':
+                            pipelineState = 'analyzing';
+                            pipelineBtn.textContent = 'Ordenando...';
+                            const sortedData = [...exampleData].sort((a, b) => a.type.localeCompare(b.type));
+                            renderData(sortedData);
+                            setTimeout(() => {
+                                pipelineBtn.textContent = 'Analizar';
+                                pipelineBtn.disabled = false;
+                            }, 500);
+                            break;
+
+                        // 3. Analizar (Mostrar Dashboards)
+                        case 'analyzing':
+                            pipelineState = 'chatbot';
+                            pipelineBtn.textContent = 'Analizando...';
+                            
+                            sourceCol.classList.add('collapsed'); // Oculta fuentes
+                            repoCol.classList.add('expanded'); // Expande DWH
+                            dataList.classList.add('fading-out'); // Oculta lista
+                            
+                            setTimeout(() => {
+                                dataView.classList.add('hidden');
+                                mainDashboardView.classList.remove('hidden'); // Muestra dashboard
+                                dataList.classList.remove('fading-out');
+                                
+                                // Opciones comunes para los gráficos
+                                const commonChartOptions = {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false, labels: { color: '#cbd5e1', boxWidth: 10, padding: 10, font: {size: 10} } }
+                                    },
+                                    scales: { 
+                                        y: { ticks: { color: '#94a3b8', font: {size: 10} }, grid: { color: 'rgba(255,255,255,0.1)' } }, 
+                                        x: { ticks: { color: '#94a3b8', font: {size: 10} }, grid: { display: false } } 
+                                    }
+                                };
+
+                                // Gráfico 1: Ingresos por Deporte
+                                const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+                                doughnutChart = new Chart(doughnutCtx, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: ['Pádel', 'Fútbol', 'Tenis'],
+                                        datasets: [{ data: [180, 110, 60], backgroundColor: ['#06b6d4', '#60a5fa', '#f87171'], borderColor: '#1e293b', borderWidth: 4 }]
+                                    },
+                                    options: { ...commonChartOptions, plugins: { legend: { display: true, position: 'top', labels: { color: '#cbd5e1', boxWidth: 10, padding: 5, font: {size: 10} } } } }
+                                });
+
+                                // Gráfico 2: Ocupación Banda Prime
+                                const barCtx = document.getElementById('barChart').getContext('2d');
+                                barChart = new Chart(barCtx, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: ['Lunes', 'Martes', 'Miérc.'],
+                                        datasets: [{ label: 'Ocupación (Banda Prime)', data: [95, 92, 98], backgroundColor: ['#fbbf24', '#a78bfa', '#f472b6'], borderRadius: 4 }]
+                                    },
+                                    options: commonChartOptions
+                                });
+
+                                // Gráfico 3: Reservas Totales
+                                const lineCtx = document.getElementById('lineChart').getContext('2d');
+                                lineChart = new Chart(lineCtx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                                        datasets: [{ label: 'Reservas Totales', data: [210, 230, 220, 255], borderColor: '#22d3ee', tension: 0.4, fill: true, backgroundColor: 'rgba(34, 211, 238, 0.2)' }]
+                                    },
+                                    options: commonChartOptions
+                                });
+                                
+                                // Gráfico 4: Análisis Elasticidad
+                                const radarCtx = document.getElementById('radarChart').getContext('2d');
+                                radarChart = new Chart(radarCtx, {
+                                    type: 'radar',
+                                    data: {
+                                        labels: ['Prime', 'Valle', 'Tarde', 'Noche', 'Mañana'],
+                                        datasets: [
+                                            { label: 'Pádel (Elasticidad)', data: [2, 8, 4, 3, 6], borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.2)'},
+                                            { label: 'Fútbol (Elasticidad)', data: [5, 4, 9, 6, 8], borderColor: '#a78bfa', backgroundColor: 'rgba(167, 139, 250, 0.2)'}
+                                        ]
+                                    },
+                                    options: { ...commonChartOptions, scales: { r: { angleLines: { color: 'rgba(255,255,255,0.1)' }, grid: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: '#cbd5e1', font: {size: 10} }, ticks: { backdropColor: 'transparent', color: '#94a3b8' } } } }
+                                });
+
+                                pipelineBtn.textContent = 'Activar Agente IA';
+                                pipelineBtn.disabled = false;
+                            }, 500);
+                            break;
+                        
+                        // 4. Activar Chatbot
+                        case 'chatbot':
+                            pipelineState = 'reset';
+                            pipelineBtn.classList.add('hidden'); // Oculta botón principal
+                            chatbotInterface.classList.remove('hidden'); // Muestra input de chat
+                            setTimeout(() => chatbotInterface.classList.add('visible'), 50);
+                            chatbotInput.value = '¿Cuál es el horario con mayor ocupación y el más sensible a precio?';
+                            break;
+                        
+                        // 5. Reset (manejado por botón de reset)
+                        case 'reset':
+                            resetPipeline();
+                            break;
+                    }
+                });
+            }
+            // --- FIN LÓGICA ANIMACIÓN PIPELINE ---
+
+            // --- LÓGICA DE NAVEGACIÓN PRINCIPAL ---
+
+            // Crear puntos indicadores
+            slides.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.classList.add('indicator-dot');
+                if (i === 0) dot.classList.add('active');
+                indicatorContainer.appendChild(dot);
+            });
+            const dots = document.querySelectorAll('.indicator-dot');
+
+            // Actualizar UI (botones y puntos)
+            function updateUI() {
+                dots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === slides.length - 1);
+
+                // Quitar destaque del pilar si no estamos en el slide 2
+                if (currentSlide !== 1) {
+                    unhighlightPilar2();
+                }
+
+                // Resetear roadmap si salimos del slide 6 (índice 5)
+                if (currentSlide !== 5) {
+                    updateRoadmapStep(0); // Resetea al primer paso
+                } else {
+                    updateRoadmapStep(currentRoadmapStep); // Asegura que muestre el paso actual al entrar
+                }
+
+                // Resetear pipeline si salimos del slide 5 (índice 4)
+                if (currentSlide !== 4 && pipelineBtn) {
+                    resetPipeline();
+                }
+            }
+
+            // Ir a una diapositiva específica
+            function goToSlide(slideIndex) {
+                 const newScrollLeft = slides[slideIndex].offsetLeft;
+                 container.scrollLeft = newScrollLeft;
+                 currentSlide = slideIndex;
+                 updateUI();
+            }
+
+            // Eventos de botones (con lógica de pasos)
+            nextBtn.addEventListener('click', () => {
+                const pilarCard = document.getElementById('pilar-2-card');
+                if (currentSlide === 1 && pilarCard && !pilarCard.classList.contains('bg-cyan-900/50')) {
+                    // 1. Estamos en Slide 2, SIN destacar. Acción: Destacar.
+                    highlightPilar2();
+                
+                } else if (currentSlide === 5 && currentRoadmapStep < totalRoadmapSteps - 1) {
+                    // 2. Estamos en Slide 6 (índice 5), y no es el último paso. Acción: Avanzar paso.
+                    updateRoadmapStep(currentRoadmapStep + 1);
+                
+                } else if (currentSlide < slides.length - 1) {
+                    // 3. Acción normal: avanzar slide.
+                    goToSlide(currentSlide + 1);
+                }
+            });
+            
+            prevBtn.addEventListener('click', () => {
+                const pilarCard = document.getElementById('pilar-2-card');
+                if (currentSlide === 2) {
+                    // 1. Estamos en Slide 3 ("Dilema"). Acción: Ir a Slide 2 y DEJARLO DESTACADO.
+                    goToSlide(currentSlide - 1);
+                    highlightPilar2(); 
+                } else if (currentSlide === 1 && pilarCard && pilarCard.classList.contains('bg-cyan-900/50')) {
+                    // 2. Estamos en Slide 2, DESTACADO. Acción: Quitar destaque.
+                    unhighlightPilar2();
+
+                } else if (currentSlide === 5 && currentRoadmapStep > 0) {
+                     // 3. Estamos en Slide 6 (índice 5), y no es el primer paso. Acción: Retroceder paso.
+                    updateRoadmapStep(currentRoadmapStep - 1);
+
+                } else if (currentSlide > 0) {
+                    // 4. Acción normal: retroceder slide.
+                    goToSlide(currentSlide - 1);
+                }
+            });
+
+            // Añadir navegación por teclado
+            document.addEventListener('keydown', (e) => {
+                // Evita navegar si el usuario está escribiendo en el chatbot
+                if (document.activeElement === chatbotInput) return;
+
+                if (e.key === 'ArrowRight') {
+                    nextBtn.click(); // Simula click en el botón (usa la nueva lógica)
+                } else if (e.key === 'ArrowLeft') {
+                    prevBtn.click(); // Simula click en el botón (usa la nueva lógica)
+                }
+            });
+
+            // Sincronizar con scroll manual
+            let scrollTimer;
+            container.addEventListener('scroll', () => {
+                clearTimeout(scrollTimer);
+                scrollTimer = setTimeout(() => {
+                    const newSlideIndex = Math.round(container.scrollLeft / container.offsetWidth);
+                    if (newSlideIndex !== currentSlide) {
+                        currentSlide = newSlideIndex;
+                        updateUI();
+                    }
+                }, 100); 
+            });
+
+            // Lógica de Acordeón (Slide 4)
+            const accordionButtons = document.querySelectorAll('.accordion-button');
+            accordionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Cierra otros acordeones en el mismo slide
+                    const parentSlide = button.closest('.slide');
+                    if (parentSlide) {
+                        parentSlide.querySelectorAll('.accordion-button').forEach(otherButton => {
+                           if (otherButton !== button) {
+                                otherButton.classList.remove('active');
+                           }
+                        });
+                    }
+                    button.classList.toggle('active');
+                });
+            });
+
+            // Activa el primer acordeón por defecto de la diapositiva "Nuestra Propuesta"
+            const proposalSlide = document.querySelector('.slide-content.max-w-3xl.mx-auto');
+            if (proposalSlide) {
+                const firstAccordion = proposalSlide.querySelector('.accordion-button');
+                if (firstAccordion) {
+                    firstAccordion.classList.add('active');
+                }
+            }
+
+            // Lógica de Pestañas (Tabs) (Slide 5)
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabContainer = button.closest('.slide-content');
+                    if (!tabContainer) return;
+                    
+                    // Actualiza botones
+                    tabContainer.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Muestra contenido
+                    const tabId = button.dataset.tab;
+                    tabContainer.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.toggle('active', content.id === tabId);
+                    });
+                });
+            });
+            
+            // --- INICIALIZACIÓN ---
+            updateRoadmapStep(0); // Estado inicial de la hoja de ruta
+            updateUI(); // Estado inicial de navegación
+        });
+    </script>
+</body>
+</html>
